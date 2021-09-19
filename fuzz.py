@@ -1,25 +1,25 @@
-#!/usr/bin/python 
-#https://github.com/gh0x0st
-#gh0x0st@protonmail.com
+import socket, time, sys
 
-import sys,socket 
-address = '127.0.0.1'
-port = 9999
-buffer = ['\x41']
+ip = "192.168.0.11"
+port = 31337
+timeout = 5
+
+buffer = []
 counter = 100
-while len(buffer)<= 10:
-	buffer.append('\x41'*counter)
-	counter=counter+100
-try:
-	for string in buffer:
-		print '[+] Sending %s bytes...' % len(string)
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		connect=s.connect((address,port))
-		s.recv(1024)
-		s.send(string + '\r\n')
-		print '[+] Done'
-except:
- 	print '[!] Unable to connect to the application. You may have crashed it.'
- 	sys.exit(0)
-finally:
-	s.close()
+while len(buffer) < 30:
+    buffer.append("A" * counter)
+    counter += 100
+
+for string in buffer:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        connect = s.connect((ip, port))
+        print("Fuzzing with %s bytes" % len(string))
+        s.send(string + "\r\n")
+        data = s.recv(1024)
+        s.close()
+    except:
+        print("Could not connect to " + ip + ":" + str(port))
+        sys.exit(0)
+    time.sleep(1)
