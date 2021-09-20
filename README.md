@@ -195,16 +195,17 @@ buffer = '\x41'*524 + '\x42'*4 + '\x43'*(1600-524-4)
 
 #### Method 1 Mona
 
-1) !mona bytearray -b "\x00"
-2) Update payload with bad chars above
-3) Now restart exe in Immunity and set it running, switch to Kali and run our script, then back to Immunity to check for bad characters. First find the address of ESP
-4) Now use Mona to compare the contents of memory starting at the address in ESP with the bytearray.bin file we created earlier
-5) `!mona compare -f bytearray.bin -a 008519F0` -a is the memory address of esp
-6) It compares the bytes in the file with those in memory, then suggests possible bad characters:
-7) From this we see 0a is another possible one as well as 00 which we had already excluded. We now create a new bytearray file with Mona
-8) Remove 00 & 0a from our exploit script:
-9) Restart exe in Immunity and set it running, switch to Kali and run the exploit, then back to Immunity and use Mona to do another check. Check value of ESP, then use the same command as before: `!mona compare -f bytearray.bin -a 008A19F0`
-10) This time we see the shellcode is unmodified which means we have no more bad characters to find.
+1) First we need to check for bad characters. We use Mona to create our initial list: `!mona bytearray -b "\x00`
+2) You can see in the output it lists all of the possible ASCII characters.
+3) Update payload with bad chars above
+4) Now restart exe in Immunity and set it running, switch to Kali and run our script, then back to Immunity to check for bad characters. First find the address of ESP
+5) Now use Mona to compare the contents of memory starting at the address in ESP with the bytearray.bin file we created earlier
+6) `!mona compare -f bytearray.bin -a 008519F0` -a is the memory address of esp
+7) It compares the bytes in the file with those in memory, then suggests possible bad characters:
+8) From this we see 0a is another possible one as well as 00 which we had already excluded. We now create a new bytearray file with Mona
+9) Remove 00 & 0a from our exploit script:
+10) Restart exe in Immunity and set it running, switch to Kali and run the exploit, then back to Immunity and use Mona to do another check. Check value of ESP, then use the same command as before: `!mona compare -f bytearray.bin -a 008A19F0`
+11) This time we see the shellcode is unmodified which means we have no more bad characters to find.
 
 
 
